@@ -5,5 +5,13 @@ class Manga:
         self.description = database_result["description"]
         self.creators = creators or [database_result["creator_name"]]
 
+    def to_dict(self):
+        return {
+            "manga_id" : self.manga_id,
+            "titles" : self.titles,
+            "description": self.description,
+            "creators": self.creators
+        }
+
     def __str__(self):
         return self.titles[0]

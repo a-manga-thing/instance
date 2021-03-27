@@ -1,14 +1,15 @@
 from .queries import QUERIES, DATABASE_CREATION
-from models import manga
+from models import manga, chapter
 from asyncio import get_event_loop
 from aiosqlite import Row, connect
+from aiohttp.web import HTTPNotFound
 
 class NotInitalized(Exception):
     pass
 
-class MangaNotFound(Exception):
+class MangaNotFound(HTTPNotFound):
     def __init__(self, manga_id):
-        return super().__init__("Could not find manga with ID {}".format(manga_id))
+        return super().__init__(text="Could not find manga with ID {}".format(manga_id))
 
 class Database:
     def __init__(self, db_path):
@@ -62,3 +63,10 @@ class Database:
                 else:
                     r[row['manga_id']] = manga.Manga(row)
             return list(r.values())
+
+    async def get_chapters(self, manga_id):
+        """Fetches all the chapters of manga_id"""
+        if not self.db:
+            raise NotInitalized()
+        res = await (await cursor.execute(QUERIES["CHAPTER_FETCH"], (manga_id,))).fetchall()
+        return [chapter.Chapter(i) for i in res]
