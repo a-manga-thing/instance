@@ -40,7 +40,10 @@ QUERIES = {
         INNER JOIN creators ON manga.manga_id == creators.manga_id
         WHERE {}
     """,
-    "CHAPTER_FETCH": """
+    "CHAPTERS_FETCH": """
         SELECT * FROM chapters WHERE manga_id = ?
+    """,
+    "CHAPTER_FETCH": """
+        SELECT * FROM CHAPTERS WHERE manga_id = ? AND number = ?
     """
 }

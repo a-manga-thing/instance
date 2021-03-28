@@ -4,12 +4,18 @@ from asyncio import get_event_loop
 from aiosqlite import Row, connect
 from aiohttp.web import HTTPNotFound
 
-class NotInitalized(Exception):
+class NotInitalized(RuntimeError):
     pass
 
 class MangaNotFound(HTTPNotFound):
     def __init__(self, manga_id):
-        return super().__init__(text="Could not find manga with ID {}".format(manga_id))
+        super().__init__(text="Could not find manga with ID {}".format(manga_id))
+
+class ChapterNotFound(HTTPNotFound):
+    def __init__(self, manga_id, chapter):
+        if chapter.is_integer():
+            chapter = int(chapter)
+        super().__init__(text="Could not find chapter {} of manga {}".format(chapter, manga_id))
 
 class Database:
     def __init__(self, db_path):
@@ -68,5 +74,16 @@ class Database:
         """Fetches all the chapters of manga_id"""
         if not self.db:
             raise NotInitalized()
-        res = await (await cursor.execute(QUERIES["CHAPTER_FETCH"], (manga_id,))).fetchall()
-        return [chapter.Chapter(i) for i in res]
+        async with self.db.cursor() as cursor:
+            res = await (await cursor.execute(QUERIES["CHAPTERS_FETCH"], (manga_id,))).fetchall()
+            return [chapter.Chapter(i) for i in res]
+
+    async def get_chapter(self, manga_id, number):
+        """Fetches specific chapter number of manga_id"""
+        if not self.db:
+            raise NotInitalized()
+        async with self.db.cursor() as cursor:
+            res = await (await cursor.execute(QUERIES["CHAPTER_FETCH"], (manga_id, number,))).fetchone()
+            if not res:
+                raise ChapterNotFound(manga_id, number)
+            return chapter.Chapter(res)

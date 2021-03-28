@@ -6,10 +6,10 @@ class Instance:
     def from_dict(cls, dc):
         return cls(
             dc['name'],
-             dc['operator'],
-             dc['icon'],
-             dc['description'],
-             dc['version']
+            dc['operator'],
+            dc['icon'],
+            dc['description'],
+            dc['version']
         )
 
     def __init__(self, name, operator, icon, description="", version=VERSION):
@@ -19,3 +19,12 @@ class Instance:
         self.icon = icon
         self.description = description
         self.version = version
+
+    def to_dict(self):
+        return {
+            "name" : self.name,
+            "operator" : self.operator,
+            "icon" : self.icon,
+            "description" : self.description,
+            "version" : self.version
+        }
