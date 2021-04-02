@@ -10,4 +10,7 @@ class Config:
         self.instance_icon = getenv("INSTANCE_ICON")
         self.instance_description = getenv("INSTANCE_DESCRIPTION")
 
+        self.thumbnail_path = getenv("THUMBNAIL_PATH", "~/mangaloid_thumbnails")
+        self.max_tags = int(getenv("MAX_TAGS", "5"))
+
 config = Config()

@@ -4,8 +4,10 @@ from asyncio import get_event_loop
 
 from config import config
 from storage import database
-from models import instance
+from storage.models import instance
 from api import api_routes
+
+from json import load
 
 class Application(instance.Instance):
     def __init__(self):
@@ -20,11 +22,32 @@ class Application(instance.Instance):
         )
 
     async def _background(self, app):
-        pass
-
+        """
+        for i in load(open("db.json", "r")):
+            manga = await self.db.create_manga(
+                type="Manga",
+                publication_status="Ongoing",
+                country_of_origin="JP",
+                scanlation_status=True,
+                titles=i["titles"],
+                artists=[i["artist"]],
+                authors=[i["author"]],
+                genres=i["genres"]
+            )
+            for c in i["chapters"]:
+                await self.db.create_chapter(
+                    manga.id,
+                    chapter_no=c["no"],
+                    page_count=c["pages"],
+                    title=c["title"],
+                    language="EN",
+                    ipfs_link=c["cid"]
+                )
+        """
+        
     async def _main(self):
-        await self.db.init()
         api_routes.ApiRoutes(self)
+        await self.db.init()
         return await _run_app(self.web, host="0.0.0.0", port=config.http_port)
 
     def start(self):
