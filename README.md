@@ -1,16 +1,15 @@
-# Mangaloid - /a/ Manga Thing Instance
-## Reference Implementation
+# Mangaloid Instance
+## Reference Implementation (Python/aiohttp/sqlalchemy)
 
 ### TODO:
 - Scanlation groups table
 - Admin API
 - Expose upload to API
 - Fix many-to-many relations in sqlalchemy
-```
-21:51:55    @compscifag | in the author-person, artist-person and manga-genre many-to-many relations, i get duplicate entries in the child tables (person and genre)
-21:52:10    @compscifag | it probably needs an "insert or ignore" thingie but i have no idea how to do this with sqlalchemy
-21:52:17    @compscifag | maybe some other anon can enlighten me
-```
+- Add ActivityPub integration, Instance subscribing and keeping as well as relevant routes  
+
+   
+
 
 ## API Reference
 
