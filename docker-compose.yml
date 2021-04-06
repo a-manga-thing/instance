@@ -1,0 +1,18 @@
+version: '3'
+services:
+  mangaloid:
+    build: .
+    container_name: mangaloid
+    environment:
+        - DB_PATH=/db/mangaloid.db
+        - HTTP_PORT=80
+        - THUMBNAIL_PATH=/db/thumbnails
+        - INSTANCE_NAME=TestInstance
+        - INSTANCE_ADDRESS=testing.mangaloid.moe
+        - INSTANCE_OPERATOR=compscifag
+        - INSTANCE_DESCRIPTION=Just a testing instance
+    volumes:
+        - ./db:/db
+    ports: 
+        - 80:80
+    restart: unless-stopped
