@@ -13,7 +13,7 @@
 
 ## API Reference
 
-### Routes
+### Manga Routes
 | Name | Parameteres |  Result
 |---|---|---|
 /info | | Instance
@@ -40,6 +40,32 @@ Args:
                     and are case-sensitive.
 ```  
    
+
+### Admin Routes
+__POST__ `/admin/add_manga` -> Manga
+```
+Args (* means mandatory):
+    type: Manga, Webtoon. Defaults to Manga
+    *country_of_origin (str) : ISO-3166 Country Code
+    *publication_status (str): Ongoing, Axed, Completed
+    *scanlation_status (bool): Is completely scanlated
+    mal_id (int): MyAnimeList ID
+    anilist_id (int): AniList ID
+    mu_id (int): MangaUpdates ID
+```
+
+__POST__ `/admin/add_chapter` -> Chapter
+```
+Args (* means mandatory):
+    *chapter_no (int)
+    chapter_postfix (str)
+    *page_count (int)
+    *title (str)
+    version (int)
+    *language (str) : ISO 639-1 Language code
+    date_added (datetime): Defaults to current datetime
+    *ipfs_link (str): IPFS CID to chapter directory
+```
 
 ### Return types
 

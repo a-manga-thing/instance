@@ -30,6 +30,6 @@ class Chapter(Base):
             "version" : self.version,
             "language_id" : self.language_id,
             "group_id" : self.group_id,
-            "date_added" : self.date_added.timestamp(),
+            "date_added" : int(self.date_added.timestamp()),
             "ipfs_link" : self.ipfs_link
         }

@@ -2,9 +2,9 @@ from asyncio import get_event_loop
 from aiohttp.web import HTTPNotFound, HTTPBadRequest
 from sqlalchemy.orm import declarative_base, sessionmaker, selectinload
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, update, desc
 from sqlalchemy import or_, not_
-from .models import Base, chapter, manga, creators
+from .models import Base, chapter, manga, creators, sync
 from datetime import datetime
 
 class MangaNotFound(HTTPNotFound):
@@ -22,6 +22,8 @@ class MandatoryParameter(HTTPBadRequest):
         super().__init__(text="You have to provide {}".format(param))
         print(param)
 
+sortOptions = {"date" : manga.Manga.last_updated, "status" : manga.Manga.publication_status}
+
 def get_mandatory_parameter(dc, param, t=list):
     if not param in dc or type(dc[param]) is not t:
         raise MandatoryParameter(param)
@@ -37,6 +39,28 @@ class Database:
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
             self.session = sessionmaker(self.engine, expire_on_commit=False, class_=AsyncSession)()
+
+    async def add_subscription(self, address, private, public):
+        statement = sync.Subscription(
+            address=address,
+            private_key=private,
+            public_key=public
+        )
+        self.session.add(statement)
+        await self.session.commit()
+
+    async def get_subscription(self, address):
+        statement = select(sync.Subscription).where(sync.Subscription.address == address)
+        return (await self.session.execute(statement)).scalars().first()
+
+    async def add_instance(self, **kwargs):
+        statement = sync.Instance(**kwargs)
+        self.session.add(statement)
+        await self.session.commit()
+
+    async def get_all_instances(self):
+        statement = select(sync.Instance)
+        return (await self.session.execute(statement)).scalars().all()
 
     async def create_manga(self, *args, **kwargs):
         """
@@ -95,6 +119,8 @@ class Database:
             ipfs_link=get_mandatory_parameter(kwargs, "ipfs_link", str)
         )
         self.session.add(statement)
+        upd = update(manga.Manga).where(manga.Manga.id == manga_id).values(last_updated=datetime.now())
+        await self.session.execute(upd)
         await self.session.commit()
         return statement
 
@@ -112,7 +138,7 @@ class Database:
             raise MangaNotFound(manga_id)
         return result
 
-    async def search(self, title=None, author=None, artist=None, tags=None):
+    async def search(self, title=None, author=None, artist=None, tags=None, limit=50, page=0, sortby="date", descending=True):
         """
         Searches manga database based on title, author, artist and genres/tags
         All of these are optional, can be used in any combination and are evaluated
@@ -125,12 +151,16 @@ class Database:
                          to define inclusion/exclusion (if missing it defaults to +).
                          As for the tags themselves they are tested as "equal" 
                          and are case-sensitive.
+            limit (int): How many items we should fetch. Defined by config.max_results on the API
+            page (int): Which page we should fetch. Used with limit to set the offset (limit * page)
+            sortby (str): Sort by: "title", "date", "status"
+            desc (bool): Descending
 
         Returns list of Manga objects that match, or empty list if none found.
         """
-        if not title and not author and not artist and not tags:
-            return []
-        statement = select(manga.Manga).options(*manga.Manga._query_options)
+        sort = sortOptions.get(sortby, sortOptions["date"])
+        statement = select(manga.Manga).options(*manga.Manga._query_options) \
+            .limit(limit).offset(limit * page).order_by(desc(sort) if descending else sort)
         if title:
             title_select = select(manga.Title).where(manga.Title.title.like("%{}%".format(title)))
             content = (await self.session.execute(title_select)).scalars().all()

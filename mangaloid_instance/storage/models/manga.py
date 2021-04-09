@@ -1,5 +1,5 @@
 from . import Base
-from sqlalchemy import Column, Integer, Enum, Boolean, Text, ForeignKey, Table
+from sqlalchemy import Column, Integer, Enum, Boolean, Text, ForeignKey, Table, DateTime
 from sqlalchemy.orm import relationship, selectinload
 import enum
 
@@ -42,6 +42,7 @@ class Manga(Base):
     mal_id = Column(Integer)
     anilist_id = Column(Integer)
     mu_id = Column(Integer)
+    last_updated = Column(DateTime)
 
     genres = relationship("Genre", secondary=MangaGenre)
     authors = relationship("Person", secondary=Author)
@@ -61,7 +62,8 @@ class Manga(Base):
             "scanlation_status": self.scanlation_status,
             "mal_id": self.mal_id,
             "anilist_id": self.anilist_id,
-            "mangaupdates_id": self.mu_id
+            "mangaupdates_id": self.mu_id,
+            "last_updated": int(self.last_updated.timestamp())
         }
 
     def __str__(self):

@@ -147,3 +147,4 @@ cython_debug/
 # Local History for Visual Studio Code
 .history/
 mangaloid_instance/mangaloid.db
+db/mangaloid.db
