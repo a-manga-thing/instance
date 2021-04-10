@@ -1,3 +1,4 @@
 aiohttp==3.7.4
 aiosqlite==0.17.0
 SQLAlchemy==1.4.3
+cryptography==3.4.7
