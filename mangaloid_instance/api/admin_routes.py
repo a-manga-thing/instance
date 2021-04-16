@@ -1,4 +1,7 @@
 from aiohttp.web import get, post, Response, json_response, HTTPBadRequest, HTTPForbidden
+from aiohttp import FormData
+from json import dumps, loads
+from io import BytesIO
 
 class NotAllowed(HTTPForbidden):
     def __init__(self):
@@ -20,6 +23,21 @@ class Routes:
         if request.remote not in addresses:
             raise NotAllowed()
 
+    async def post_async(self,form):
+        data = FormData()
+        for i in form:
+            data.add_field("file", i, filename=i.name)
+        res = await self.instance.client.post("{}/api/v0/add".format(self.instance.config.upload_ipfs_node),
+            headers={"Accept" : "application/json"},
+            data=data,
+            params={
+                "wrap-with-directory" : "true",
+                "stream-channels" : "true",
+                "pin" : "true",
+                "quieter" : "true"
+            })
+        return [loads(i) for i in (await res.text()).splitlines()]
+
     async def add_manga(self, request):
         self._check(request)
         data = await request.post()
@@ -29,21 +47,21 @@ class Routes:
     async def add_chapter(self, request):
         self._check(request)
         #TODO: Implement image verification and IPFS uploading
-        data = await request.post()
-        manga_id = data.get("manga_id")
-        await self.instance.db.get_manga_by_id(manga_id)
-        """
-        form = await request.multipart()
+        await self.instance.db.get_manga_by_id(request.query.get("manga_id"))
+        reader = await request.multipart()
+        form = []
         while True:
-            part = await form.next()
-            if part is None:
+            part = await reader.next()
+            if not part:
                 break
-            raw = await part.read()
-            await self.instance.client.post("/api/v0/add", params={
-
-            })
-        """
-        chapter = await self.instance.db.create_chapter(manga_id, **data)
+            name = part.filename.split("/")[-1]
+            data = BytesIO(await part.read())
+            data.name = name
+            form.append(data)
+        res = await self.post_async(form)
+        cid = next(i["Hash"] for i in res if not i["Name"])
+        print(request.query)
+        chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
         return json_response(chapter.to_dict(), status=201)
 
     async def subscribe_to_instance(self, request):

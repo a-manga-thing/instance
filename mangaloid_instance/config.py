@@ -12,7 +12,7 @@ class Config:
         self.instance_icon = getenv("INSTANCE_ICON")
         self.instance_description = getenv("INSTANCE_DESCRIPTION")
 
-        self.upload_ipfs_node = getenv("UPLOAD_IPFS", "127.0.0.1")
+        self.upload_ipfs_node = getenv("UPLOAD_IPFS", "http://127.0.0.1:5001")
         self.thumbnail_path = getenv("THUMBNAIL_PATH", "~/mangaloid_thumbnails")
         self.max_tags = int(getenv("MAX_TAGS", "5"))
         self.max_results = int(getenv("MAX_RESULTS", 50))

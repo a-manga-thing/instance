@@ -20,14 +20,20 @@ class ChapterNotFound(HTTPNotFound):
 class MandatoryParameter(HTTPBadRequest):
     def __init__(self, param):
         super().__init__(text="You have to provide {}".format(param))
-        print(param)
+
+class WrongParameterType(HTTPBadRequest):
+    def __init__(self, param, t):
+        super().__init__(text="{} needs to be of type {}".format(param, t))
 
 sortOptions = {"date" : manga.Manga.last_updated, "status" : manga.Manga.publication_status}
 
 def get_mandatory_parameter(dc, param, t=list):
-    if not param in dc or type(dc[param]) is not t:
+    if not param in dc:
         raise MandatoryParameter(param)
-    return dc[param]
+    try:
+        return t(dc[param])
+    except:
+        raise WrongParameterType(param, t)
 
 class Database:
     def __init__(self, db_path):
@@ -93,7 +99,7 @@ class Database:
         await self.session.commit()
         return statement
 
-    async def create_chapter(self, manga_id, **kwargs):
+    async def create_chapter(self, **kwargs):
         """
         Creates a new chapter entry. ID is set by the database.
         Args (* means mandatory):
@@ -107,6 +113,7 @@ class Database:
             *ipfs_link (str): IPFS CID to chapter directory
         Returns Chapter object as present in the database.
         """
+        manga_id = get_mandatory_parameter(kwargs, "manga_id", int)
         statement = chapter.Chapter(
             manga_id=manga_id,
             chapter_no=get_mandatory_parameter(kwargs, "chapter_no", int),

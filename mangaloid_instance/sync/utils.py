@@ -54,4 +54,5 @@ async def create_sync_payload(dc, key):
     return await _run_async(_create_sync_payload, dc, key)
 
 async def get_sync_payload(b64, key):
+    """Converts Base64-encoded string created with 'create_sync_payload' to dictionary"""
     return await _run_async(_get_sync_payload, b64, key)
