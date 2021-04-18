@@ -63,7 +63,7 @@ class Manga(Base):
             "mal_id": self.mal_id,
             "anilist_id": self.anilist_id,
             "mangaupdates_id": self.mu_id,
-            "last_updated": int(self.last_updated.timestamp())
+            "last_updated": int(self.last_updated.timestamp()) if self.last_updated else 0
         }
 
     def __str__(self):

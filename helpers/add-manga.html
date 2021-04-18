@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mangaloid Upload</title>
+</head>
+
+<body>
+    <form id="form">
+        <label for="titles">Titles:</label>
+        <input type="text" name="titles" id="titles"><br>
+        <label for="authors">Authors:</label>
+        <input type="text" name="authors" id="authors"><br>
+        <label for="artists">Artists:</label>
+        <input type="text" name="artists" id="artists"><br>
+        <label for="genres">Genres:</label>
+        <input type="text" name="genres" id="genres"><br>
+        <label for="cor">Country of origin:</label>
+        <input type="text" name="country_of_origin" id="cor"><br>
+        <label for="type">Type <b>(Fill this out)</b>:</label>
+        <select name="type" id="type">
+            <option value="Manga" selected>Manga</option>
+            <option value="Webtoon">Webtoon</option>
+        </select><br>
+        <label for="pub_status">Publication status:</label>
+        <select name="publication_status" id="pub_status">
+            <option value="Ongoing">Ongoing</option>
+            <option value="Axed">Axed</option>
+            <option value="Completed">Completed</option>
+        </select><br>
+        <label for="scan_status">Scanlation Status <b>(Fill this out)</b>:</label>
+        <input type="checkbox" name="scanlation_status" id="scan_status"><br>
+        <label for="mal_id">MyAnimeList ID:</label>
+        <input type="text" name="mal_id" id="mal_id"><br>
+        <label for="anilist_id">AniList ID:</label>
+        <input type="text" name="anilist_id" id="anilist_id"><button id="fill">Fill</button><br>
+        <label for="mu_id">MangaUpdates ID:</label>
+        <input type="text" name="mangaupdates_id" id="mu_id"><br>
+        <input type="submit"><br>
+    </form>
+    <span id="result"></span>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const ANILIST_QL = `
+query ($id: Int) {
+    Media(id: $id) {
+        idMal,
+        status,
+        genres,
+        countryOfOrigin,
+        title {
+        romaji
+        english
+        native
+        userPreferred
+        },
+        synonyms,
+        staff {
+        edges {
+            node {
+            name {
+                full
+            },
+            },
+            role
+        }
+        }
+    }
+}
+            `
+            const statuses = {FINISHED: "Completed", RELEASING: "Ongoing", CANCELLED: "Axed"};
+    </script>
+    <script>
+        $("#fill").click((e) => {
+            e.preventDefault();
+            fetch("https://graphql.anilist.co", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: ANILIST_QL,
+                    variables: {id: $("#anilist_id").val()}
+                })
+            }).then(res => res.json().then(res => {
+                let o = res.data.Media;
+                $("#titles").val(([o.title.romaji, o.title.english, o.title.native].concat(o.synonyms)).join());
+                $("#genres").val(o.genres.join());
+                $("#mal_id").val(o.idMal);
+                if (o.status in statuses) $("#status").val(statuses[o.status]);
+
+                let authors = [];
+                let artists = [];
+                for (let i in o.staff.edges) {
+                    let staff = o.staff.edges[i];
+                    switch(staff.role) {
+                        case "Story":
+                            authors.push(staff.node.name.full);
+                            break;
+                        case "Art":
+                            artists.push(staff.node.name.full);
+                            break;
+                        case "Story & Art":
+                            artists.push(staff.node.name.full);
+                            authors.push(staff.node.name.full);
+                            break;
+                    }
+                }
+                $("#authors").val(authors.join());
+                $("#artists").val(artists.join());
+                $("#cor").val(o.countryOfOrigin);
+            }));
+        });
+    </script>
+    <script>
+        $("#form").on("submit", function(e) {
+            e.preventDefault();
+            addManga("/admin/add_manga", 
+            Object.fromEntries(new FormData(document.getElementById("form")))).then(res => {
+                $("#result").val(res);
+            });
+        });
+        async function addManga(uploadUrl, params) {
+            function raise(err) {
+                throw err;
+            }
+            let data = new FormData();
+            data.append("titles", params.titles || raise("No titles"));
+            data.append("authors", params.authors || raise("No authors"));
+            data.append("artists", params.artists || raise("No artists"));
+            data.append("genres", params.genres || raise("No genres"));
+            data.append("type", params.type || "Manga");
+            data.append("country_of_origin", params.country_of_origin || raise("No country of origin"));
+            data.append("publication_status", params.publication_status || raise("No publication status"));
+            data.append("scanlation_status", params.scanlation_status);
+            data.append("mal_id", params.mal_id);
+            data.append("anilist_id", params.anilist_id);
+            data.append("mangaupdates_id", params.mangaupdates_id);
+            let res = await fetch(uploadUrl, {method: "POST", body: data});
+            return await res.json();
+        }
+    </script>
+</body>
+
+</html>

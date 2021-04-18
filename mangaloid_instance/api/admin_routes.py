@@ -19,7 +19,6 @@ class Routes:
 
     def _check(self, request):
         addresses = ["127.0.0.1"] + self.instance.config.admin_ips
-        print(addresses)
         if request.remote not in addresses:
             raise NotAllowed()
 
@@ -40,13 +39,17 @@ class Routes:
 
     async def add_manga(self, request):
         self._check(request)
-        data = await request.post()
+        data = (await request.post()).copy()
+        data["titles"] = [i.strip() for i in data["titles"].split(",")]
+        data["artists"] = [i.strip() for i in data["artists"].split(",")]
+        data["authors"] = [i.strip() for i in data["authors"].split(",")]
+        data["genres"] = [i.strip() for i in data["genres"].split(",")]
         manga = await self.instance.db.create_manga(**data)
         return json_response(manga.to_dict(), status=201)
 
     async def add_chapter(self, request):
         self._check(request)
-        #TODO: Implement image verification and IPFS uploading
+        #TODO: Implement image verification
         await self.instance.db.get_manga_by_id(request.query.get("manga_id"))
         reader = await request.multipart()
         form = []
@@ -60,7 +63,6 @@ class Routes:
             form.append(data)
         res = await self.post_async(form)
         cid = next(i["Hash"] for i in res if not i["Name"])
-        print(request.query)
         chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
         return json_response(chapter.to_dict(), status=201)
 

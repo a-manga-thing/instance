@@ -78,7 +78,7 @@ class Database:
             *scanlation_status (bool): Is completely scanlated
             mal_id (int): MyAnimeList ID
             anilist_id (int): AniList ID
-            mu_id (int): MangaUpdates ID
+            mangaupdates_id (int): MangaUpdates ID
         
         Returns Manga object as present in the database.
         """
@@ -87,9 +87,9 @@ class Database:
             country_of_origin=get_mandatory_parameter(kwargs, "country_of_origin", str).strip()[0:2],
             publication_status=manga.PubStatuses[get_mandatory_parameter(kwargs, "publication_status", str)],
             scanlation_status=get_mandatory_parameter(kwargs, "scanlation_status", bool),
-            mal_id=int(kwargs.get("mal_id", 0)),
-            anilist_id=int(kwargs.get("anilist_id", 0)),
-            mu_id=int(kwargs.get("mangaupdates_id", 0))
+            mal_id=int(kwargs.get("mal_id", 0) or 0),
+            anilist_id=int(kwargs.get("anilist_id", 0) or 0),
+            mu_id=int(kwargs.get("mangaupdates_id", 0) or 0)
         )
         statement.authors.extend([creators.Person(name=i) for i in get_mandatory_parameter(kwargs, "authors")])
         statement.artists.extend([creators.Person(name=i) for i in get_mandatory_parameter(kwargs, "artists")])
