@@ -42,7 +42,7 @@ Args:
    
 
 ### Admin Routes
-__POST__ `/admin/add_manga` -> Manga
+__POST__ `/admin/add_manga` -> `{"id" : int}`
 ```
 Args (* means mandatory):
     type: Manga, Webtoon. Defaults to Manga

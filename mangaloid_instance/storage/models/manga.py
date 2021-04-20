@@ -16,9 +16,9 @@ class PubStatuses(enum.Enum):
 
 class Title(Base):
     __tablename__ = "titles"
-
-    manga_id = Column(Integer, ForeignKey("manga.id"), primary_key=True)
-    title = Column(Text, primary_key=True)
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    manga_id = Column(Integer, ForeignKey("manga.id"))
+    title = Column(Text)
 
 class Genre(Base):
     __tablename__ = "genre"

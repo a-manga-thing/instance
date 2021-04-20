@@ -118,7 +118,7 @@ query ($id: Int) {
             e.preventDefault();
             addManga("/admin/add_manga", 
             Object.fromEntries(new FormData(document.getElementById("form")))).then(res => {
-                $("#result").val(res);
+                $("#result").html(JSON.stringify(res));
             });
         });
         async function addManga(uploadUrl, params) {

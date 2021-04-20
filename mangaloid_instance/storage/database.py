@@ -2,7 +2,7 @@ from asyncio import get_event_loop
 from aiohttp.web import HTTPNotFound, HTTPBadRequest
 from sqlalchemy.orm import declarative_base, sessionmaker, selectinload
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.sql import select, update, desc
+from sqlalchemy.sql import select, update, desc, insert
 from sqlalchemy import or_, not_
 from .models import Base, chapter, manga, creators, sync
 from datetime import datetime
@@ -68,6 +68,21 @@ class Database:
         statement = select(sync.Instance)
         return (await self.session.execute(statement)).scalars().all()
 
+    class _FakeObj:
+        def __init__(self, id):
+            self.id = id
+
+    async def _get_or_insert(self, t, **kwargs):
+        statement = select(t)
+        for i,v in kwargs.items():
+            statement = statement.where(getattr(t, i) == v)
+        res = (await self.session.execute(statement)).scalars().first()
+        if res:
+            return res
+        statement = insert(t).values(**kwargs)
+        res = await self.session.execute(statement)
+        return self._FakeObj(res.inserted_primary_key[0])
+
     async def create_manga(self, *args, **kwargs):
         """
         Creates a new manga entry. ID is set by the database.
@@ -82,6 +97,7 @@ class Database:
         
         Returns Manga object as present in the database.
         """
+        nested = await self.session.begin_nested()
         statement = manga.Manga(
             content_type=manga.Types[get_mandatory_parameter(kwargs, "type", str)],
             country_of_origin=get_mandatory_parameter(kwargs, "country_of_origin", str).strip()[0:2],
@@ -89,15 +105,28 @@ class Database:
             scanlation_status=get_mandatory_parameter(kwargs, "scanlation_status", bool),
             mal_id=int(kwargs.get("mal_id", 0) or 0),
             anilist_id=int(kwargs.get("anilist_id", 0) or 0),
-            mu_id=int(kwargs.get("mangaupdates_id", 0) or 0)
+            mu_id=int(kwargs.get("mangaupdates_id", 0) or 0),
+            titles=[manga.Title(title=i) for i in get_mandatory_parameter(kwargs, "titles")]
         )
-        statement.authors.extend([creators.Person(name=i) for i in get_mandatory_parameter(kwargs, "authors")])
-        statement.artists.extend([creators.Person(name=i) for i in get_mandatory_parameter(kwargs, "artists")])
-        statement.titles.extend([manga.Title(title=i) for i in get_mandatory_parameter(kwargs, "titles")])
-        statement.genres.extend([manga.Genre(name=i) for i in get_mandatory_parameter(kwargs, "genres")])
         self.session.add(statement)
+        try:
+            authors = get_mandatory_parameter(kwargs, "authors")
+            for a in authors:
+                res = await self._get_or_insert(creators.Person, name=a)
+                await self.session.execute(insert(creators.Author).values(manga_id=statement.id, person_id=res.id))
+            artists = get_mandatory_parameter(kwargs, "artists")
+            for a in artists:
+                res = await self._get_or_insert(creators.Person, name=a)
+                await self.session.execute(insert(creators.Artist).values(manga_id=statement.id, person_id=res.id))
+            genres = get_mandatory_parameter(kwargs, "genres")
+            for g in genres:
+                res = await self._get_or_insert(manga.Genre, name=g)
+                await self.session.execute(insert(manga.MangaGenre).values(manga_id=statement.id, genre_id=res.id))
+        except Exception as e:
+            await nested.rollback()
+            raise e
         await self.session.commit()
-        return statement
+        return statement.id
 
     async def create_chapter(self, **kwargs):
         """

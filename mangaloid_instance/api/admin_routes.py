@@ -45,7 +45,7 @@ class Routes:
         data["authors"] = [i.strip() for i in data["authors"].split(",")]
         data["genres"] = [i.strip() for i in data["genres"].split(",")]
         manga = await self.instance.db.create_manga(**data)
-        return json_response(manga.to_dict(), status=201)
+        return json_response({"id" : manga}, status=201)
 
     async def add_chapter(self, request):
         self._check(request)
