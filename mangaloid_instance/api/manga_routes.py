@@ -17,7 +17,9 @@ class Routes:
             get("/manga/search", self.search),
             get("/manga/get_chapters", self.get_chapters),
             get("/manga/thumbnail", self.thumbnail),
-            static("/thumbnail", self.instance.config.thumbnail_path)
+            static("/thumbnail", self.instance.config.thumbnail_path),
+            get("/manga/people", self.get_people),
+            get("/manga/scanlators", self.get_scanlators)
         ])
 
     async def from_id(self, request):
@@ -61,3 +63,9 @@ class Routes:
         except Exception:
             raise InvalidInput()
         raise HTTPFound("/thumbnail/{}.webp".format(query_id))
+
+    async def get_people(self, request):
+        return json_response([i.name for i in await self.instance.db.get_people()])
+    
+    async def get_scanlators(self, request):
+        return json_response([i.to_dict() for i in await self.instance.db.get_scanlators()])

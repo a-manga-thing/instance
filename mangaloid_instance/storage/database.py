@@ -46,6 +46,21 @@ class Database:
             await conn.run_sync(Base.metadata.create_all)
             self.session = sessionmaker(self.engine, expire_on_commit=False, class_=AsyncSession)()
 
+    class _FakeObj:
+        def __init__(self, id):
+            self.id = id
+
+    async def _get_or_insert(self, t, **kwargs):
+        statement = select(t)
+        for i,v in kwargs.items():
+            statement = statement.where(getattr(t, i) == v)
+        res = (await self.session.execute(statement)).scalars().first()
+        if res:
+            return res
+        statement = insert(t).values(**kwargs)
+        res = await self.session.execute(statement)
+        return self._FakeObj(res.inserted_primary_key[0])
+
     async def add_subscription(self, address, private, public):
         statement = sync.Subscription(
             address=address,
@@ -67,21 +82,6 @@ class Database:
     async def get_all_instances(self):
         statement = select(sync.Instance)
         return (await self.session.execute(statement)).scalars().all()
-
-    class _FakeObj:
-        def __init__(self, id):
-            self.id = id
-
-    async def _get_or_insert(self, t, **kwargs):
-        statement = select(t)
-        for i,v in kwargs.items():
-            statement = statement.where(getattr(t, i) == v)
-        res = (await self.session.execute(statement)).scalars().first()
-        if res:
-            return res
-        statement = insert(t).values(**kwargs)
-        res = await self.session.execute(statement)
-        return self._FakeObj(res.inserted_primary_key[0])
 
     async def create_manga(self, *args, **kwargs):
         """
@@ -250,3 +250,9 @@ class Database:
         statement = select(chapter.Chapter).where(chapter.Chapter.manga_id == manga_id).options(*chapter.Chapter._query_options)
         result = (await self.session.execute(statement)).scalars().all()
         return result or []
+
+    async def get_people(self):
+        return (await self.session.execute(select(creators.Person))).scalars().all()
+
+    async def get_scanlators(self):
+        return (await self.session.execute(select(creators.ScanlatorGroup))).scalars().all()

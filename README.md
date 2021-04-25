@@ -2,11 +2,7 @@
 ## Reference Implementation (Python/aiohttp/sqlalchemy)
 
 ### TODO:
-- Scanlation groups table
-- Add ActivityPub integration, Instance subscribing and keeping as well as relevant routes  
-
-   
-
+- Finish sneed impementation
 
 ## API Reference
 
@@ -18,6 +14,8 @@
 /manga/from_id | Integer: __id__ | Manga
 /manga/get_chapters | Integer: __id__ | Chapter[]
 /manga/thumbnail | Integer: __id__ | Image
+/manga/people | | String[]
+/manga/thumbnail | | Scanlator[]
 ---
 __Parameters are passed as URL-encoded GET parameters__
 __Multiple genres should be CSV__   
@@ -107,5 +105,14 @@ Args (* means mandatory):
     "group_id": int,
     "date_added": int, // UTC Unix Timestamp
     "ipfs_link": str
+}
+```
+
+#### __Scanlator__
+```json
+{
+    "id": int,
+    "name": str,
+    "website": str
 }
 ```
