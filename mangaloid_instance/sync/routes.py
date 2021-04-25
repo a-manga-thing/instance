@@ -1,6 +1,9 @@
 from aiohttp.web import get, post, Response, json_response
 from aiohttp import ClientConnectionError
 from .utils import get_key_pair, get_sync_payload
+from storage.models import manga, chapter
+
+sync_types = {"Manga" : manga.Manga, "Chapter" : chapter.Chapter}
 
 class Routes:
     def __init__(self, instance):
@@ -41,3 +44,9 @@ class Routes:
         dc = await request.json()
         subscription = await self.instance.db.get_subscription(dc["instance"])
         payload = await get_sync_payload(dc["payload"], subscription.private_key)
+        if payload["action"] == "CREATE":
+            pass
+        elif payload["action"] == "MODIFY":
+            pass
+        elif payload["action"] == "DELETE":
+            pass

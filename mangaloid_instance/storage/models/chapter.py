@@ -1,5 +1,7 @@
 from . import Base
+from .creators import Scanlator
 from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey
+from sqlalchemy.orm import relationship, selectinload
 from datetime import datetime
 
 class Chapter(Base):
@@ -17,6 +19,8 @@ class Chapter(Base):
     group_id = Column(Integer)
     date_added = Column(DateTime)
     ipfs_link = Column(Text)
+    instance = Column(Text)
+    scanlator = relationship("ScanlatorGroup", secondary=Scanlator)
 
     def to_dict(self):
         return {
@@ -31,5 +35,8 @@ class Chapter(Base):
             "language_id" : self.language_id,
             "group_id" : self.group_id,
             "date_added" : int(self.date_added.timestamp()),
-            "ipfs_link" : self.ipfs_link
+            "ipfs_link" : self.ipfs_link,
+            "scanlator" : self.scanlator[0].to_dict()
         }
+
+Chapter._query_options = [selectinload(Chapter.scanlator)]

@@ -7,7 +7,6 @@ from base64 import b64encode, b64decode
 from asyncio import get_event_loop
 from concurrent.futures.process import ProcessPoolExecutor
 
-
 async def _run_async(call, *args):
     with ProcessPoolExecutor() as pool:
         return await get_event_loop().run_in_executor(pool, call, *args)

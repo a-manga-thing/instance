@@ -13,6 +13,7 @@ class Routes:
         self.instance.web.add_routes([
             post("/admin/add_manga", self.add_manga),
             post("/admin/add_chapter", self.add_chapter),
+            post("/admin/add_scanlator", self.add_scanlator),
             get("/admin/subscribe", self.subscribe_to_instance),
             get("/admin/unsubscribe", self.unsubscribe_from_instance)
         ])
@@ -64,7 +65,13 @@ class Routes:
         res = await self.post_async(form)
         cid = next(i["Hash"] for i in res if not i["Name"])
         chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
-        return json_response(chapter.to_dict(), status=201)
+        return json_response({"id" : chapter}, status=201)
+
+    async def add_scanlator(self, request):
+        self._check(request)
+        data = await request.post()
+        res = await self.instance.db.create_scanlator(**data)
+        return json_response({"id" : res}, status=201)
 
     async def subscribe_to_instance(self, request):
         self._check(request)

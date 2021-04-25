@@ -1,10 +1,19 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Mangaloid Upload</title>
+        <title>Mangaloid Chapter Upload</title>
     </head>
     <body>
-        <form id="form">
+        <form id="scanlator-form">
+            <label for="scanlator-name">Name:</label>
+            <input name="name" type="text" id="scanlator-name"><br>
+            <label for="scanlator-website">Website:</label>
+            <input name="website" type="text" id="scanlator-website"><br>
+            <input type="submit"><br>
+            <span id="scanlator-result"></span><br>
+        </form>
+        <br><br>
+        <form id="chapter-form">
             <label for="manga_id">Manga ID:</label>
             <input name="manga_id" type="number" id="manga_id"><br>
             <label for="chapter_no">Chapter No.:</label>
@@ -15,6 +24,8 @@
             <input required type="text" name="title" id="title"><br>
             <label for="version">Version:</label>
             <input type="number" name="version" id="version"><br>
+            <label for="scanlator_id">Scanlator ID:</label>
+            <input type="number" name="scanlator_id" id="scanlator_id"><br>
             <label for="language">Language:</label>
             <select required name="language" id="language">
                 <option value=af>Afrikaans</option>
@@ -124,15 +135,37 @@
             <input id="fileInput" name="files" type="file" webkitdirectory mozdirectory /><br>
             <input type="submit"><br>
         </form>
-        <span id="result"></span>
+        <span id="chapter-result"></span>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-            document.getElementById("form").addEventListener("submit", function(e) {
+            $("#chapter-form").on("submit", function(e) {
                 e.preventDefault();
                 uploadChapter("/admin/add_chapter", 
                 document.getElementById("fileInput"),
-                Object.fromEntries(new FormData(document.getElementById("form")))
-                ).then(res => document.getElementById("result").innerHTML = JSON.stringify(res));
+                Object.fromEntries(new FormData(document.getElementById("chapter-form")))
+                ).then(res => $("#chapter-result").html(JSON.stringify(res)));
             });
+
+            $("#scanlator-form").on("submit", function(e) {
+                e.preventDefault();
+                addScanlator("/admin/add_scanlator",
+                Object.fromEntries(new FormData(document.getElementById("scanlator-form")))
+                ).then(res => $("#scanlator-result").html(JSON.stringify(res)));
+            });
+
+            async function addScanlator(uploadUrl, params) {
+                function raise(err) {
+                    throw err;
+                }
+                let post = new FormData();
+                post.append("name", params.name || raise("No scanlator name"));
+                post.append("website", params.website || "");
+                let res = await fetch(uploadUrl, {
+                    method: "POST",
+                    body: post
+                });
+                return await res.json();
+            }
 
             async function uploadChapter(uploadUrl, fileInput, params) {
                 function raise(err) {
@@ -143,6 +176,7 @@
                 get.append("manga_id", params.manga_id || raise("No Manga ID"));
                 get.append("chapter_no", params.chapter_no || raise("No Chapter number"));
                 get.append("title", params.title || raise("No Chapter title"));
+                get.append("scanlator_id", params.scanlator_id || raise("No scanlator id"));
                 get.append("chapter_postfix", params.chapter_postfix || "");
                 get.append("version", params.version || "0");
                 get.append("language", params.language || raise("No language"));

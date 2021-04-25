@@ -54,10 +54,11 @@ Args (* means mandatory):
     mu_id (int): MangaUpdates ID
 ```
 
-__POST__ `/admin/add_chapter` -> Chapter
+__POST__ `/admin/add_chapter` -> `{"id" : int}`
 ```
 Args (* means mandatory):
     *chapter_no (int)
+    *scanlator_id (int)
     chapter_postfix (str)
     *page_count (int)
     *title (str)
@@ -65,6 +66,13 @@ Args (* means mandatory):
     *language (str) : ISO 639-1 Language code
     date_added (datetime): Defaults to current datetime
     *ipfs_link (str): IPFS CID to chapter directory
+```
+
+__POST__ `/admin/add_scanlator` -> `{"id" : int}`
+```
+Args (* means mandatory):
+    *name (str)
+    website (str)
 ```
 
 ### Return types

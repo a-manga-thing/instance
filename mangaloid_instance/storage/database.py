@@ -133,6 +133,7 @@ class Database:
         Creates a new chapter entry. ID is set by the database.
         Args (* means mandatory):
             *chapter_no (int)
+            *scanlator_id (int)
             chapter_postfix (str)
             *page_count (int)
             *title (str)
@@ -143,6 +144,11 @@ class Database:
         Returns Chapter object as present in the database.
         """
         manga_id = get_mandatory_parameter(kwargs, "manga_id", int)
+        scanlator_id = get_mandatory_parameter(kwargs, "scanlator_id", str)
+        res = (await self.session.execute(select(creators.ScanlatorGroup)
+        .where(creators.ScanlatorGroup.id == scanlator_id))).scalars().first()
+        if not res:
+            raise HTTPBadRequest("Invalid Scanlation Group ID")
         statement = chapter.Chapter(
             manga_id=manga_id,
             chapter_no=get_mandatory_parameter(kwargs, "chapter_no", int),
@@ -155,10 +161,25 @@ class Database:
             ipfs_link=get_mandatory_parameter(kwargs, "ipfs_link", str)
         )
         self.session.add(statement)
-        upd = update(manga.Manga).where(manga.Manga.id == manga_id).values(last_updated=datetime.now())
-        await self.session.execute(upd)
         await self.session.commit()
-        return statement
+        await self.session.execute(insert(creators.Scanlator).values(chapter_id=statement.id, scanlator_id=scanlator_id))
+        await self.session.execute(update(manga.Manga).where(manga.Manga.id == manga_id).values(last_updated=datetime.now()))
+        await self.session.commit()
+        return statement.id
+
+    async def create_scanlator(self, **kwargs):
+        """
+        Args (* means mandatory):
+            *name (str)
+            website (str)
+        """
+        statement = creators.ScanlatorGroup(
+            name=get_mandatory_parameter(kwargs, "name", str),
+            website=kwargs.get("website", "")
+        )
+        self.session.add(statement)
+        await self.session.commit()
+        return statement.id
 
     async def get_manga_by_id(self, manga_id):
         """
@@ -226,6 +247,6 @@ class Database:
         
         Returns list of Chapter objects or empty list if manga is not found or has no chapters.
         """
-        statement = select(chapter.Chapter).where(chapter.Chapter.manga_id == manga_id)
+        statement = select(chapter.Chapter).where(chapter.Chapter.manga_id == manga_id).options(*chapter.Chapter._query_options)
         result = (await self.session.execute(statement)).scalars().all()
         return result or []
