@@ -3,9 +3,6 @@
 
 ### TODO:
 - Scanlation groups table
-- Admin API
-- Expose upload to API
-- Fix many-to-many relations in sqlalchemy
 - Add ActivityPub integration, Instance subscribing and keeping as well as relevant routes  
 
    
