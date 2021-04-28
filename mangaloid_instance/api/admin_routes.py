@@ -14,6 +14,7 @@ class Routes:
             post("/admin/add_manga", self.add_manga),
             post("/admin/add_chapter", self.add_chapter),
             post("/admin/add_scanlator", self.add_scanlator),
+            post("/admin/rm_manga", self.rm_manga),
             get("/admin/subscribe", self.subscribe_to_instance),
             get("/admin/unsubscribe", self.unsubscribe_from_instance)
         ])
@@ -79,6 +80,10 @@ class Routes:
         data = await request.post()
         res = await self.instance.db.create_scanlator(**data)
         return json_response({"id" : res}, status=201)
+
+    async def rm_manga(self, request):
+        self._check(request)
+        await self.instance.db.rm_manga(request.query.get("manga_id"))
 
     async def subscribe_to_instance(self, request):
         self._check(request)
