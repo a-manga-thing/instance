@@ -6,4 +6,4 @@ RUN pip install -r requirements.txt
 COPY . /app
 WORKDIR /app/mangaloid_instance
 
-CMD [ "python", "main.py" ]
+CMD [ "python", "-u", "main.py" ]
