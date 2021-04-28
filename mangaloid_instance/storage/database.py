@@ -2,7 +2,7 @@ from asyncio import get_event_loop
 from aiohttp.web import HTTPNotFound, HTTPBadRequest
 from sqlalchemy.orm import declarative_base, sessionmaker, selectinload
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.sql import select, update, desc, insert
+from sqlalchemy.sql import select, update, desc, insert, delete
 from sqlalchemy import or_, not_
 from .models import Base, chapter, manga, creators, sync
 from datetime import datetime
@@ -180,6 +180,13 @@ class Database:
         self.session.add(statement)
         await self.session.commit()
         return statement.id
+
+    async def rm_manga(self, manga_id):
+        #delete all related chapters
+        statement = delete(manga.Manga).where(manga.Manga.id == manga_id)
+        await self.session.execute(statement)
+        await self.session.commit()
+        return 
 
     async def get_manga_by_id(self, manga_id):
         """
