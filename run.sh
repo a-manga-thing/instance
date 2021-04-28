@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#!!! DO NOT MODIFY THIS FILE MANUALLY. USE setup.sh INSTEAD !!!
+
+export DB_PATH=$HOME/mangaloid_db/mangaloid.db
+export HTTP_PORT=80
+export THUMBNAIL_PATH=$HOME/mangaloid_db/thumbnails
+export INSTANCE_NAME=INSTANCE_NAME_REPLACE
+export INSTANCE_ADDRESS=INSTANCE_ADDRESS_REPLACE
+export INSTANCE_OPERATOR=INSTANCE_OPERATOR_REPLACE
+export INSTANCE_DESCRIPTION=INSTANCE_DESCRIPTION_REPLACE
+export UPLOAD_IPFS=http://ipfs:5001
+export ADMIN_IPS=172.20.0.1,172.22.0.1
+
+python3 -c "from mangaloid_instance import run; run()";

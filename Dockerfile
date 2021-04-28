@@ -6,6 +6,6 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . /app
-WORKDIR /app/mangaloid_instance
+WORKDIR /app
 
-CMD [ "python", "-u", "main.py" ]
+CMD [ "python", "-u", "run.py" ]

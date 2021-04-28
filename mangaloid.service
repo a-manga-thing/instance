@@ -1,0 +1,19 @@
+[Unit]
+Description=Mangaloid Instance
+After=network.target
+
+[Service]
+ExecStart=EXECUTABLE_REPLACE
+Restart=on-failure
+Environment=DB_PATH=%h/mangaloid_db/mangaloid.db
+Environment=HTTP_PORT=80
+Environment=THUMBNAIL_PATH=%h/mangaloid_db/thumbnails
+Environment=INSTANCE_NAME=INSTANCE_NAME_REPLACE
+Environment=INSTANCE_ADDRESS=INSTANCE_ADDRESS_REPLACE
+Environment=INSTANCE_OPERATOR=INSTANCE_OPERATOR_REPLACE
+Environment=INSTANCE_DESCRIPTION=INSTANCE_DESCRIPTION_REPLACE
+Environment=UPLOAD_IPFS=http://ipfs:5001
+Environment=ADMIN_IPS=172.20.0.1,172.22.0.1
+
+[Install]
+WantedBy=multi-user.target

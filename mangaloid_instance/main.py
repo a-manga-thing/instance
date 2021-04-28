@@ -3,15 +3,15 @@ from aiohttp.web import _run_app, get, json_response
 from aiohttp import ClientSession
 from asyncio import get_event_loop, Queue, gather
 from logging import info, error, warn
-
-from version import VERSION
-from config import config
-from storage import database
-from storage.models import sync as sync_model
-from api import manga_routes, admin_routes
 from os import mkdir, listdir, path
 from shutil import copy
-import sync
+
+from .version import VERSION
+from .config import config
+from .storage import database
+from .storage.models import sync as sync_model
+from .api import manga_routes, admin_routes
+from . import sync
 
 class Application(sync_model.Instance):
     def __init__(self):
@@ -41,8 +41,11 @@ class Application(sync_model.Instance):
             mkdir(self.config.thumbnail_path)
         except:
             pass
-        for i in listdir("../helpers"):
-            copy(path.join("../helpers", i), self.config.thumbnail_path)
+        try:
+            for i in listdir("../helpers"):
+                copy(path.join("../helpers", i), self.config.thumbnail_path)
+        except FileNotFoundError:
+            print("../helpers not found\nYou're probably using a pip installation.\nIf you want to use the helper pages copy them manually to the thumbnail directory")
 
     async def _main(self):
         manga_routes.Routes(self)

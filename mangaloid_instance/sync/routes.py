@@ -1,7 +1,7 @@
 from aiohttp.web import get, post, Response, json_response
 from aiohttp import ClientConnectionError
 from .utils import get_key_pair, get_sync_payload
-from storage.models import manga, chapter
+from ..storage.models import manga, chapter
 
 sync_types = {"Manga" : manga.Manga, "Chapter" : chapter.Chapter}
 
