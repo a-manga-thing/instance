@@ -181,10 +181,16 @@ class Database:
         await self.session.commit()
         return statement.id
 
+    async def rm_chapter(self, chapter_id):
+        await self.session.execute(delete(chapter.Chapter).where(chapter.Chapter.id == chapter_id))
+        await self.session.commit()
+        return
+
     async def rm_manga(self, manga_id):
-        #delete all related chapters
-        statement = delete(manga.Manga).where(manga.Manga.id == manga_id)
-        await self.session.execute(statement)
+        chapters = (await self.session.execute(select(chapter.Chapter.id).where(chapter.Chapter.manga_id == manga_id))).all()
+        for chapter_id in [t[0] for t in chapters]:
+            await self.rm_chapter(chapter_id)
+        await self.session.execute(delete(manga.Manga).where(manga.Manga.id == manga_id))
         await self.session.commit()
         return 
 
