@@ -38,9 +38,11 @@ class Routes:
                 "pin" : "true",
                 "quieter" : "true"
             })
+        res = (await res.text()).splitlines()
         try:
-            return [loads(i) for i in (await res.text()).splitlines()]
+            return [loads(i) for i in res]
         except JSONDecodeError: 
+            print("IPFS server error: ", res)
             return []
             
 
@@ -69,7 +71,7 @@ class Routes:
             data.name = name
             form.append(data)
         res = await self.post_async(form)
-        if len(res) == 0:
+        if len(res) > 0:
             cid = next(i["Hash"] for i in res if not i["Name"])
             chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
             return json_response({"id" : chapter}, status=201)
