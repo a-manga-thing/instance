@@ -14,6 +14,8 @@ class Routes:
             post("/admin/add_manga", self.add_manga),
             post("/admin/add_chapter", self.add_chapter),
             post("/admin/add_scanlator", self.add_scanlator),
+            post("/admin/rm_manga", self.rm_manga),
+            post("/admin/rm_chapter", self.rm_chapter),
             get("/admin/subscribe", self.subscribe_to_instance),
             get("/admin/unsubscribe", self.unsubscribe_from_instance)
         ])
@@ -36,7 +38,13 @@ class Routes:
                 "pin" : "true",
                 "quieter" : "true"
             })
-        return [loads(i) for i in (await res.text()).splitlines()]
+        res = (await res.text()).splitlines()
+        try:
+            return [loads(i) for i in res]
+        except JSONDecodeError: 
+            print("IPFS server error: ", res)
+            return []
+            
 
     async def add_manga(self, request):
         self._check(request)
@@ -63,15 +71,26 @@ class Routes:
             data.name = name
             form.append(data)
         res = await self.post_async(form)
-        cid = next(i["Hash"] for i in res if not i["Name"])
-        chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
-        return json_response({"id" : chapter}, status=201)
+        if len(res) > 0:
+            cid = next(i["Hash"] for i in res if not i["Name"])
+            chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
+            return json_response({"id" : chapter}, status=201)
+        else:
+            return Response(status=500)
 
     async def add_scanlator(self, request):
         self._check(request)
         data = await request.post()
         res = await self.instance.db.create_scanlator(**data)
         return json_response({"id" : res}, status=201)
+
+    async def rm_manga(self, request):
+        self._check(request)
+        await self.instance.db.rm_manga(request.query.get("id"))
+
+    async def rm_chapter(self, request):
+        self._check(request)
+        await self.instance.db.rm_chapter(request.query.get("id"))
 
     async def subscribe_to_instance(self, request):
         self._check(request)
