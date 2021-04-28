@@ -9,6 +9,8 @@ from config import config
 from storage import database
 from storage.models import sync as sync_model
 from api import manga_routes, admin_routes
+from os import mkdir, listdir, path
+from shutil import copy
 import sync
 
 class Application(sync_model.Instance):
@@ -35,7 +37,12 @@ class Application(sync_model.Instance):
         })
 
     async def _startup_tasks(self, app):
-        pass
+        try:
+            mkdir(self.config.thumbnail_path)
+        except:
+            pass
+        for i in listdir("../helpers"):
+            copy(path.join("../helpers", i), self.config.thumbnail_path)
 
     async def _main(self):
         manga_routes.Routes(self)

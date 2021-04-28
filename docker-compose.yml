@@ -11,8 +11,34 @@ services:
         - INSTANCE_ADDRESS=testing.mangaloid.moe
         - INSTANCE_OPERATOR=compscifag
         - INSTANCE_DESCRIPTION=Just a testing instance
+        - UPLOAD_IPFS=http://ipfs:5001
+        - ADMIN_IPS=172.20.0.1,172.22.0.1
     volumes:
         - ./db:/db
     ports: 
         - 80:80
     restart: unless-stopped
+    networks: 
+      - mangaloid-network
+
+  ipfs:
+    image: ghcr.io/linuxserver/ipfs
+    container_name: ipfs
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Athens
+    volumes:
+      - ./db/data:/config
+    ports:
+      - 8081:80
+      - 4001:4001
+      - 5001:5001
+      - 8080:8080
+    restart: unless-stopped
+    networks: 
+      - mangaloid-network
+
+networks:
+  mangaloid-network:
+   
