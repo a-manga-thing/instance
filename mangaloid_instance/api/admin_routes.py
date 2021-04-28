@@ -36,7 +36,11 @@ class Routes:
                 "pin" : "true",
                 "quieter" : "true"
             })
-        return [loads(i) for i in (await res.text()).splitlines()]
+        try:
+            return [loads(i) for i in (await res.text()).splitlines()]
+        except JSONDecodeError: 
+            return []
+            
 
     async def add_manga(self, request):
         self._check(request)
@@ -63,9 +67,12 @@ class Routes:
             data.name = name
             form.append(data)
         res = await self.post_async(form)
-        cid = next(i["Hash"] for i in res if not i["Name"])
-        chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
-        return json_response({"id" : chapter}, status=201)
+        if len(res) == 0:
+            cid = next(i["Hash"] for i in res if not i["Name"])
+            chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
+            return json_response({"id" : chapter}, status=201)
+        else:
+            return Response(status=500)
 
     async def add_scanlator(self, request):
         self._check(request)
