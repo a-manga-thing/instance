@@ -1,4 +1,4 @@
-from aiohttp.web import get, post, Response, json_response, HTTPBadRequest, HTTPForbidden
+from aiohttp.web import get, post, put, delete, Response, json_response, HTTPBadRequest, HTTPForbidden
 from aiohttp import FormData
 from json import dumps, loads
 from io import BytesIO
@@ -11,13 +11,20 @@ class Routes:
     def __init__(self, instance):
         self.instance = instance
         self.instance.web.add_routes([
-            post("/admin/add_manga", self.add_manga),
-            post("/admin/add_chapter", self.add_chapter),
-            post("/admin/add_scanlator", self.add_scanlator),
-            post("/admin/rm_manga", self.rm_manga),
-            post("/admin/rm_chapter", self.rm_chapter),
-            get("/admin/subscribe", self.subscribe_to_instance),
-            get("/admin/unsubscribe", self.unsubscribe_from_instance)
+            post("/admin/manga", self.add_manga),
+            delete("/admin/manga", self.rm_manga),
+            put("/admin/manga", self.update_manga),
+
+            post("/admin/chapter", self.add_chapter),
+            delete("/admin/chapter", self.rm_chapter),
+            put("/admin/chapter", self.update_chapter),
+
+            post("/admin/scanlator", self.add_scanlator),
+            delete("/admin/scanlator", self.rm_scanlator),
+            put("/admin/scanlator", self.update_scanlator),
+
+            post("/admin/subscription", self.subscribe_to_instance),
+            delete("/admin/subscription", self.unsubscribe_from_instance),
         ])
 
     def _check(self, request):
@@ -56,6 +63,13 @@ class Routes:
         manga = await self.instance.db.create_manga(**data)
         return json_response({"id" : manga}, status=201)
 
+    async def rm_manga(self, request):
+        self._check(request)
+        await self.instance.db.rm_manga(request.query.get("id"))
+
+    async def update_manga(self, request):
+        pass
+
     async def add_chapter(self, request):
         self._check(request)
         #TODO: Implement image verification
@@ -78,19 +92,24 @@ class Routes:
         else:
             return Response(status=500)
 
+    async def rm_chapter(self, request):
+        self._check(request)
+        await self.instance.db.rm_chapter(request.query.get("id"))
+
+    async def update_chapter(self, request):
+        pass
+
     async def add_scanlator(self, request):
         self._check(request)
         data = await request.post()
         res = await self.instance.db.create_scanlator(**data)
         return json_response({"id" : res}, status=201)
+    
+    async def rm_scanlator(self, request):
+        pass
 
-    async def rm_manga(self, request):
-        self._check(request)
-        await self.instance.db.rm_manga(request.query.get("id"))
-
-    async def rm_chapter(self, request):
-        self._check(request)
-        await self.instance.db.rm_chapter(request.query.get("id"))
+    async def update_scanlator(self, request):
+        pass
 
     async def subscribe_to_instance(self, request):
         self._check(request)
