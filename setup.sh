@@ -107,12 +107,14 @@ while [[ "1" ]]; do
     esac
 done
 
-echo "Automatically detected $INIT_SYSTEM as your init system.
-Continue with that ? Answering no will skip init setup. [y/n]
-";
-read INPUT;
-if [[ $INPUT != "y" ]]; then
-    INIT_SYSTEM="none";
+if [[ $INIT_SYSTEM != "docker" ]]; then
+    echo "Automatically detected $INIT_SYSTEM as your init system.
+    Continue with that ? Answering no will skip init setup. [y/n]
+    ";
+    read INPUT;
+    if [[ $INPUT != "y" ]]; then
+        INIT_SYSTEM="none";
+    fi
 fi
 
 case $INIT_SYSTEM in
