@@ -1,3 +1,5 @@
+#!!! DO NOT MODIFY THIS FILE MANUALLY. USE setup.sh INSTEAD !!!
+
 [Unit]
 Description=Mangaloid Instance
 After=network.target
@@ -5,6 +7,7 @@ After=network.target
 [Service]
 ExecStart=EXECUTABLE_REPLACE
 Restart=on-failure
+User=REPLACE_USER
 Environment=DB_PATH=%h/mangaloid_db/mangaloid.db
 Environment=HTTP_PORT=80
 Environment=THUMBNAIL_PATH=%h/mangaloid_db/thumbnails

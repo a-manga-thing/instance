@@ -3,7 +3,7 @@ from aiohttp.web import _run_app, get, json_response
 from aiohttp import ClientSession
 from asyncio import get_event_loop, Queue, gather
 from logging import info, error, warn
-from os import mkdir, listdir, path
+from os import listdir, path, makedirs
 from shutil import copy
 
 from .version import VERSION
@@ -38,7 +38,7 @@ class Application(sync_model.Instance):
 
     async def _startup_tasks(self, app):
         try:
-            mkdir(self.config.thumbnail_path)
+            makedirs(self.config.thumbnail_path, exist_ok=True)
         except:
             pass
         try:
