@@ -258,7 +258,7 @@ class Database:
         
         Returns list of Chapter objects or empty list if manga is not found or has no chapters.
         """
-        statement = select(chapter.Chapter).where(chapter.Chapter.manga_id == manga_id).options(*chapter.Chapter._query_options)
+        statement = select(chapter.Chapter).where(chapter.Chapter.manga_id == manga_id).options(*chapter.Chapter._query_options).order_by(chapter.Chapter.ordinal)
         result = (await self.session.execute(statement)).scalars().all()
         return result or []
 
