@@ -37,6 +37,9 @@ class Application(sync_model.Instance):
         })
 
     async def _startup_tasks(self, app):
+        pass
+
+    async def _main(self):
         try:
             makedirs(self.config.thumbnail_path, exist_ok=True)
         except:
@@ -46,8 +49,9 @@ class Application(sync_model.Instance):
                 copy(path.join("../helpers", i), self.config.thumbnail_path)
         except FileNotFoundError:
             print("../helpers not found\nYou're probably using a pip installation.\nIf you want to use the helper pages copy them manually to the thumbnail directory")
+        except Exception as e:
+            print("Could not install helpers: {}".format(e))
 
-    async def _main(self):
         manga_routes.Routes(self)
         admin_routes.Routes(self)
         sync.Routes(self)

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #!!! DO NOT MODIFY THIS FILE MANUALLY. USE setup.sh INSTEAD !!!
 
+cd $HOME/.local/mangaloid
+
 export DB_PATH=$HOME/mangaloid_db/mangaloid.db
 export HTTP_PORT=80
 export THUMBNAIL_PATH=$HOME/mangaloid_db/thumbnails

@@ -57,7 +57,6 @@ while [[ "1" ]]; do
             ;;
         2)
             INSTALLATION_METHOD="pip";
-
             break;
             ;;
         3)
@@ -83,11 +82,9 @@ while [[ "1" ]]; do
         2)
             case $INIT_SYSTEM in
                 "systemd")
-                    cp inits/mangaloid.service.template mangaloid.service
                     replace_ipfs_address mangaloid.service;
                     ;;
                 "docker")
-                    cp inits/docker-compose.yml.template docker-compose.yml
                     replace_ipfs_address docker-compose.yml;
                     for ((i=25;i<=41;i++)); do
                         line=$(sed $i"q;d" docker-compose.yml);
@@ -96,8 +93,10 @@ while [[ "1" ]]; do
                     done
                     ;;
                 "init")
-                    echo "SysV isn't really supported yet. Sorry...";
-                    exit 1;
+                    echo '';
+                    ;;
+                "none")
+                    replace_ipfs_address run.sh;
                     ;;
             esac
             break;
@@ -107,6 +106,30 @@ while [[ "1" ]]; do
             ;;
     esac
 done
+
+echo "Automatically detected $INIT_SYSTEM as your init system.
+Continue with that ? Answering no will skip init setup. [y/n]
+";
+read INPUT;
+if [[ $INPUT != "y" ]]; then
+    INIT_SYSTEM="none";
+fi
+
+case $INIT_SYSTEM in
+    "systemd")
+        cp inits/mangaloid.service.template mangaloid.service
+        ;;
+    "docker")
+        cp inits/docker-compose.yml.template docker-compose.yml
+        ;;
+    "init")
+        echo "SysV isn't really supported yet. Sorry...";
+        exit 1;
+        ;;
+    "none")
+        cp inits/run.sh.template run.sh;
+        ;;
+esac
 
 params=("NAME" "ADDRESS" "OPERATOR" "DESCRIPTION");
 case $INIT_SYSTEM in
@@ -123,6 +146,11 @@ case $INIT_SYSTEM in
     "init")
         for i in "${params[@]}"; do 
             replace_param "$i" "sysv-run.sh";
+        done
+        ;;
+    "none")
+        for i in "${params[@]}"; do 
+            replace_param "$i" "run.sh";
         done
         ;;
 esac
@@ -160,5 +188,8 @@ case $INIT_SYSTEM in
         ;;
     "init")
         replace_exec sysv-run.sh "$executable";
+        ;;
+    "none")
+        echo "You can start the mangaloid instance with ~/.local/mangaloid/run.sh";
         ;;
 esac

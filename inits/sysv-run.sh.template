@@ -1,4 +1,5 @@
 #!/bin/bash
+#!!! DO NOT MODIFY THIS FILE MANUALLY. USE setup.sh INSTEAD !!!
 . /etc/init.d/functions
 
 start() {
