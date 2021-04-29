@@ -25,7 +25,7 @@ class Routes:
         if request.remote not in addresses:
             raise NotAllowed(request.remote)
 
-    async def post_async(self,form):
+    async def _post_async(self,form):
         data = FormData()
         for i in form:
             data.add_field("file", i, filename=i.name)
@@ -70,7 +70,7 @@ class Routes:
             data = BytesIO(await part.read())
             data.name = name
             form.append(data)
-        res = await self.post_async(form)
+        res = await self._post_async(form)
         if len(res) > 0:
             cid = next(i["Hash"] for i in res if not i["Name"])
             chapter = await self.instance.db.create_chapter(ipfs_link=cid, page_count=len(form) , **request.query)
