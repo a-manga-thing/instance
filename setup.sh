@@ -69,6 +69,34 @@ while [[ "1" ]]; do
     esac
 done
 
+echo $INIT_SYSTEM;
+if [[ $INIT_SYSTEM != "docker" ]]; then
+    echo "Automatically detected $INIT_SYSTEM as your init system.
+    Continue with that ? Answering no will skip init setup. [y/n]
+    ";
+    read INPUT;
+    if [[ $INPUT != "y" ]]; then
+        INIT_SYSTEM="none";
+    fi
+fi
+
+case $INIT_SYSTEM in
+    "systemd")
+        cp inits/mangaloid.service.template mangaloid.service
+        ;;
+    "docker")
+        echo "debug";
+        cp inits/docker-compose.yml.template docker-compose.yml
+        ;;
+    "init")
+        echo "SysV isn't really supported yet. Sorry...";
+        exit 1;
+        ;;
+    "none")
+        cp inits/run.sh.template run.sh;
+        ;;
+esac
+
 echo "Select IPFS setting:
 [1] Managed by instance (Recommended)
 [2] External
@@ -106,32 +134,6 @@ while [[ "1" ]]; do
             ;;
     esac
 done
-
-if [[ $INIT_SYSTEM != "docker" ]]; then
-    echo "Automatically detected $INIT_SYSTEM as your init system.
-    Continue with that ? Answering no will skip init setup. [y/n]
-    ";
-    read INPUT;
-    if [[ $INPUT != "y" ]]; then
-        INIT_SYSTEM="none";
-    fi
-fi
-
-case $INIT_SYSTEM in
-    "systemd")
-        cp inits/mangaloid.service.template mangaloid.service
-        ;;
-    "docker")
-        cp inits/docker-compose.yml.template docker-compose.yml
-        ;;
-    "init")
-        echo "SysV isn't really supported yet. Sorry...";
-        exit 1;
-        ;;
-    "none")
-        cp inits/run.sh.template run.sh;
-        ;;
-esac
 
 params=("NAME" "ADDRESS" "OPERATOR" "DESCRIPTION");
 case $INIT_SYSTEM in
