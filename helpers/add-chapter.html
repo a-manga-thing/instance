@@ -149,7 +149,7 @@
 
             $("#chapter-form").on("submit", function (e) {
                 e.preventDefault();
-                uploadChapter("/admin/add_chapter",
+                uploadChapter("/admin/chapter",
                     document.getElementById("fileInput"),
                     Object.fromEntries(new FormData(document.getElementById("chapter-form")))
                 ).then(res => $("#chapter-result").html(JSON.stringify(res)));
@@ -157,7 +157,7 @@
 
             $("#scanlator-form").on("submit", function (e) {
                 e.preventDefault();
-                addScanlator("/admin/add_scanlator",
+                addScanlator("/admin/scanlator",
                     Object.fromEntries(new FormData(document.getElementById("scanlator-form")))
                 ).then(res => $("#scanlator-result").html(JSON.stringify(res)));
             });

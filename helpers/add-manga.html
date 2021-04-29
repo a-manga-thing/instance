@@ -116,7 +116,7 @@ query ($id: Int) {
     <script>
         $("#form").on("submit", function(e) {
             e.preventDefault();
-            addManga("/admin/add_manga", 
+            addManga("/admin/manga", 
             Object.fromEntries(new FormData(document.getElementById("form")))).then(res => {
                 $("#result").html(JSON.stringify(res));
             });
