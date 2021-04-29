@@ -1,6 +1,15 @@
 # Mangaloid Instance
 ## Reference Implementation (Python/aiohttp/sqlalchemy)
 
+## How to install
+You can easily setup a mangaloid instance with the provided prompt-based setup script.  
+This supports either installation (via Docker or pip), or simply running off the repo.  
+Daemon is provided by either systemd or sysvinit (Coming soon...), for non-docker installations.
+
+__Run the following in your terminal:__  
+>bash <(curl -s "https://raw.githubusercontent.com/a-manga-thing/instance/setup/setup.sh")
+
+
 ### TODO:
 - Finish sneed impementation
 
