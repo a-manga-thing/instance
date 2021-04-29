@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Text
-from version import VERSION
 from . import Base
 
 class Subscription(Base):
