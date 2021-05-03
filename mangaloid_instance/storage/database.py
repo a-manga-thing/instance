@@ -1,4 +1,4 @@
-from asyncio import get_event_loop
+from asyncio import get_event_loop, Lock
 from aiohttp.web import HTTPNotFound, HTTPBadRequest
 from sqlalchemy.orm import declarative_base, sessionmaker, selectinload
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -39,6 +39,7 @@ class Database:
     def __init__(self, db_path):
         self.db_path = db_path
         self.engine = create_async_engine("sqlite+aiosqlite:///{}".format(self.db_path))
+        self.lock = Lock()
     
     async def init(self):
         base = Base
@@ -108,25 +109,26 @@ class Database:
             mu_id=int(kwargs.get("mangaupdates_id", 0) or 0),
             titles=[manga.Title(title=i) for i in get_mandatory_parameter(kwargs, "titles")]
         )
-        self.session.add(statement)
-        try:
-            authors = get_mandatory_parameter(kwargs, "authors")
-            for a in authors:
-                res = await self._get_or_insert(creators.Person, name=a)
-                await self.session.execute(insert(creators.Author).values(manga_id=statement.id, person_id=res.id))
-            artists = get_mandatory_parameter(kwargs, "artists")
-            for a in artists:
-                res = await self._get_or_insert(creators.Person, name=a)
-                await self.session.execute(insert(creators.Artist).values(manga_id=statement.id, person_id=res.id))
-            genres = get_mandatory_parameter(kwargs, "genres")
-            for g in genres:
-                res = await self._get_or_insert(manga.Genre, name=g)
-                await self.session.execute(insert(manga.MangaGenre).values(manga_id=statement.id, genre_id=res.id))
-        except Exception as e:
-            await nested.rollback()
-            raise e
-        await self.session.commit()
-        return statement.id
+        async with self.lock:
+            self.session.add(statement)
+            try:
+                authors = get_mandatory_parameter(kwargs, "authors")
+                for a in authors:
+                    res = await self._get_or_insert(creators.Person, name=a)
+                    await self.session.execute(insert(creators.Author).values(manga_id=statement.id, person_id=res.id))
+                artists = get_mandatory_parameter(kwargs, "artists")
+                for a in artists:
+                    res = await self._get_or_insert(creators.Person, name=a)
+                    await self.session.execute(insert(creators.Artist).values(manga_id=statement.id, person_id=res.id))
+                genres = get_mandatory_parameter(kwargs, "genres")
+                for g in genres:
+                    res = await self._get_or_insert(manga.Genre, name=g)
+                    await self.session.execute(insert(manga.MangaGenre).values(manga_id=statement.id, genre_id=res.id))
+            except Exception as e:
+                await nested.rollback()
+                raise e
+            await self.session.commit()
+            return statement.id
 
     async def create_chapter(self, **kwargs):
         """
@@ -160,37 +162,58 @@ class Database:
             date_added=kwargs.get("date_added", datetime.now()),
             ipfs_link=get_mandatory_parameter(kwargs, "ipfs_link", str)
         )
-        self.session.add(statement)
-        await self.session.commit()
-        await self.session.execute(insert(creators.Scanlator).values(chapter_id=statement.id, scanlator_id=scanlator_id))
-        await self.session.execute(update(manga.Manga).where(manga.Manga.id == manga_id).values(last_updated=datetime.now()))
-        await self.session.commit()
-        return statement.id
+        async with self.lock:
+            self.session.add(statement)
+            await self.session.commit()
+            await self.session.execute(insert(creators.Scanlator).values(chapter_id=statement.id, scanlator_id=scanlator_id))
+            await self.session.execute(update(manga.Manga).where(manga.Manga.id == manga_id).values(last_updated=datetime.now()))
+            await self.session.commit()
+            return statement.id
 
     async def create_scanlator(self, **kwargs):
         """
+        Creates a new scanlator group
+
         Args (* means mandatory):
             *name (str)
             website (str)
+
+        Returns newly created ID
         """
         statement = creators.ScanlatorGroup(
             name=get_mandatory_parameter(kwargs, "name", str),
             website=kwargs.get("website", "")
         )
-        self.session.add(statement)
-        await self.session.commit()
-        return statement.id
+        async with self.lock:
+            self.session.add(statement)
+            await self.session.commit()
+            return statement.id
 
-    async def rm_chapter(self, chapter_id):
-        await self.session.execute(delete(chapter.Chapter).where(chapter.Chapter.id == chapter_id))
-        await self.session.commit()
-        return
 
-    async def rm_manga(self, manga_id):
-        await self.session.execute(delete(chapter.Chapter).where(chapter.Chapter.manga_id == manga_id))
-        await self.session.execute(delete(manga.Manga).where(manga.Manga.id == manga_id))
-        await self.session.commit()
-        return 
+    async def remove_chapter(self, chapter_id):
+        """
+        Removes a chapter with the provided id.
+        Args:
+            *chapter_id (positional) (int)
+        
+        Returns None on success.
+        """
+        async with self.lock:
+            await self.session.execute(delete(chapter.Chapter).where(chapter.Chapter.id == chapter_id))
+            await self.session.commit()
+
+    async def remove_manga(self, manga_id):
+        """
+        Removes a manga with the provided id along with all its chapters.
+        Args:
+            *manga_id (positional) (int)
+        
+        Returns None on success.
+        """
+        async with self.lock:
+            await self.session.execute(delete(chapter.Chapter).where(chapter.Chapter.manga_id == manga_id))
+            await self.session.execute(delete(manga.Manga).where(manga.Manga.id == manga_id))
+            await self.session.commit()
 
     async def get_manga_by_id(self, manga_id):
         """
@@ -263,7 +286,15 @@ class Database:
         return result or []
 
     async def get_people(self):
+        """
+        Fetches all people stored in the database.
+        Returns list of Person objects or None if no people are stored
+        """
         return (await self.session.execute(select(creators.Person))).scalars().all()
 
     async def get_scanlators(self):
+        """
+        Fetches all Scanlator groups stored in the database.
+        Returns list of ScanlatorGroup objects or None if no groups are stored
+        """        
         return (await self.session.execute(select(creators.ScanlatorGroup))).scalars().all()

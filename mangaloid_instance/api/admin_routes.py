@@ -86,11 +86,11 @@ class Routes:
 
     async def rm_manga(self, request):
         self._check(request)
-        await self.instance.db.rm_manga(request.query.get("id"))
+        await self.instance.db.remove_manga(request.query.get("id"))
 
     async def rm_chapter(self, request):
         self._check(request)
-        await self.instance.db.rm_chapter(request.query.get("id"))
+        await self.instance.db.remove_chapter(request.query.get("id"))
 
     async def subscribe_to_instance(self, request):
         self._check(request)
