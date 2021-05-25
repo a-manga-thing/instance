@@ -7,7 +7,7 @@ This supports either installation (via Docker or pip), or simply running off the
 Daemon is provided by either systemd or sysvinit (Coming soon...), for non-docker installations.
 
 __Run the following in your terminal:__  
->bash <(curl -s "https://raw.githubusercontent.com/a-manga-thing/instance/setup/setup.sh")
+>bash <(curl -s "https://setup.mangaloid.moe")
 
 
 ### TODO:
