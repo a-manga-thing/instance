@@ -18,7 +18,8 @@ class Routes:
             get("/search", self.search),
             get("/people", self.get_people),
             get("/scanlator", self.get_scanlators),
-            static("/thumbnail", self.instance.config.thumbnail_path)
+            get("/thumbnail", self.thumbnail),
+            static("/thumb", self.instance.config.thumbnail_path)
         ])
 
     async def from_id(self, request):
@@ -55,6 +56,13 @@ class Routes:
             raise InvalidInput()
         chapters = await self.instance.db.get_chapters(query_id)
         return json_response([i.to_dict() for i in chapters])
+
+    async def thumbnail(self, request):
+        try:
+            query_id = int(request.query.get("id"))
+        except Exception:
+            raise InvalidInput()
+        raise HTTPFound("/thumb/{}.webp".format(query_id))
 
     async def get_people(self, request):
         return json_response([i.name for i in await self.instance.db.get_people()])
