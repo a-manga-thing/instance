@@ -11,13 +11,15 @@ class Routes:
     def __init__(self, instance):
         self.instance = instance
         self.instance.web.add_routes([
-            post("/admin/add_manga", self.add_manga),
-            post("/admin/add_chapter", self.add_chapter),
-            post("/admin/add_scanlator", self.add_scanlator),
-            post("/admin/rm_manga", self.rm_manga),
-            post("/admin/rm_chapter", self.rm_chapter),
-            get("/admin/subscribe", self.subscribe_to_instance),
-            get("/admin/unsubscribe", self.unsubscribe_from_instance)
+            post("/manga", self.add_manga),
+            post("/chapter", self.add_chapter),
+            post("/scanlator", self.add_scanlator),
+            post("/subscription", self.subscribe_to_instance),
+            delete("/manga", self.rm_manga),
+            delete("/chapter", self.rm_chapter),
+            delete("/scanlator", None),
+            delete("/subscription", self.unsubscribe_from_instance),
+            get("/subscription", None)
         ])
 
     def _check(self, request):
