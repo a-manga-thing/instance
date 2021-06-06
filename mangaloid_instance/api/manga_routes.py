@@ -13,13 +13,12 @@ class Routes:
     def __init__(self, instance):
         self.instance = instance
         self.instance.web.add_routes([
-            get("/manga/from_id", self.from_id),
-            get("/manga/search", self.search),
-            get("/manga/get_chapters", self.get_chapters),
-            get("/manga/thumbnail", self.thumbnail),
-            static("/thumbnail", self.instance.config.thumbnail_path),
-            get("/manga/people", self.get_people),
-            get("/manga/scanlators", self.get_scanlators)
+            get("/manga", self.from_id),
+            get("/chapter", self.get_chapters),
+            get("/search", self.search),
+            get("/people", self.get_people),
+            get("/scanlator", self.get_scanlators),
+            static("/thumbnail", self.instance.config.thumbnail_path)
         ])
 
     async def from_id(self, request):
@@ -56,13 +55,6 @@ class Routes:
             raise InvalidInput()
         chapters = await self.instance.db.get_chapters(query_id)
         return json_response([i.to_dict() for i in chapters])
-
-    async def thumbnail(self, request):
-        try:
-            query_id = int(request.query.get("id"))
-        except Exception:
-            raise InvalidInput()
-        raise HTTPFound("/thumbnail/{}.webp".format(query_id))
 
     async def get_people(self, request):
         return json_response([i.name for i in await self.instance.db.get_people()])
