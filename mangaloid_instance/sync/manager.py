@@ -1,4 +1,4 @@
-from asyncio import Queue
+from asyncio import Queue, get_event_loop, Lock
 from .utils import create_sync_payload
 from enum import Enum
 from aiohttp import ClientSession
@@ -24,13 +24,44 @@ class SyncItem:
             "payload" : payload
         }
 
+class Approval:
+    def __init__(self, payload):
+        self.id = str(hash(frozenset(payload.items())))
+        self.payload = payload
+        self.lock = Lock()
+        self.approved = False
+
+    async def wait_for_approval(self, manager):
+        await self.lock.acquire()
+        if self.approved:
+            if self.payload["action"] == "CREATE":
+                pass
+            elif self.payload["action"] == "MODIFY":
+                pass
+            elif self.payload["action"] == "DELETE":
+                pass
+
+    def approve(self):
+        self.approved = True
+        self.lock.release()
+
+    def reject(self):
+        self.lock.release()
+
 class SyncManager:
     def __init__(self, ctx):
+        self.instance = ctx
         self.db = ctx.db
         self.address = ctx.config.instance_address
         self.queue = Queue()
+        self.approvals = {}
         self.http = ClientSession()
         self.logger = getLogger("sync-manager")
+
+    def add_approval(self, payload):
+        ap = Approval(payload)
+        self.approvals[ap.id] = ap
+        get_event_loop().create_task(self.approvals[ap.id].wait_for_approval(self))
 
     def add(self, obj):
         self.queue.put_nowait(SyncItem(obj, SyncEvents.CREATE))

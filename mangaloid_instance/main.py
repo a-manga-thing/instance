@@ -54,7 +54,7 @@ class Application(sync_model.Instance):
 
         manga_routes.Routes(self)
         admin_routes.Routes(self)
-        sync.Routes(self)
+        sync.Routes(self.sync_manager)
 
         await self.db.init()
         return await gather(

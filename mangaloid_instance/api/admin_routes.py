@@ -1,6 +1,6 @@
 from aiohttp.web import get, post, Response, json_response, HTTPBadRequest, HTTPForbidden
 from aiohttp import FormData
-from json import dumps, loads
+from json import loads
 from io import BytesIO
 
 class NotAllowed(HTTPForbidden):
@@ -17,7 +17,10 @@ class Routes:
             post("/admin/rm_manga", self.rm_manga),
             post("/admin/rm_chapter", self.rm_chapter),
             get("/admin/subscribe", self.subscribe_to_instance),
-            get("/admin/unsubscribe", self.unsubscribe_from_instance)
+            get("/admin/unsubscribe", self.unsubscribe_from_instance),
+            get("/admin/get_pending_approvals", self.get_pending_approvals),
+            get("/admin/approve_sync", self.approve_sync),
+            get("/admin/reject_sync", self.reject_sync)
         ])
 
     def _check(self, request):
@@ -104,3 +107,19 @@ class Routes:
     async def unsubscribe_from_instance(self, request):
         self._check(request)
         pass
+
+    async def get_pending_approvals(self, request):
+        self._check(request)
+        return json_response(list(self.instance.sync_manager.approvals.values()))
+
+    async def approve_sync(self, request):
+        self._check(request)
+        id = request.query.get("address")
+        self.instance.sync_manager.approvals[id].approve()
+        return Response("OK")
+
+    async def reject_sync(self, request):
+        self._check(request)
+        id = request.query.get("address")
+        self.instance.sync_manager.approvals[id].reject()
+        return Response("OK")
