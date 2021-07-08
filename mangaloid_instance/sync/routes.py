@@ -32,7 +32,7 @@ class Routes:
         if address and address in self.manager.context["subscribe_confirmations"]:
             private, public = await get_key_pair()
             self.manager.db.add_subscription(address, private, public)
-            dc = self.manager.to_dict()
+            dc = self.manager.instance.to_dict()
             dc["public_key"] = public
             self.manager.context["subscribe_confirmations"].remove(address)
             return json_response(dc)
